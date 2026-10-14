@@ -219,6 +219,7 @@ class Tools_Admin {
 		$disabled_count = $total_count - $active_count;
 		$target_locale  = \SOYOO\Tools\Features\Feature_Force_French_Emails::get_target_locale();
 		$saved_notice   = isset( $_GET['updated'] ) && '1' === $_GET['updated'];
+		$db_opt_notice  = isset( $_GET['soyoo_db_opt_done'] ) && '1' === (string) $_GET['soyoo_db_opt_done'];
 		?>
 		<div class="wrap wst-wrap">
 			<hr class="wp-header-end">
@@ -259,6 +260,31 @@ class Tools_Admin {
 				</div>
 			<?php endif; ?>
 
+			<?php if ( $db_opt_notice ) : ?>
+				<?php
+				$as_actions   = isset( $_GET['as_actions'] ) ? absint( $_GET['as_actions'] ) : 0;
+				$as_logs      = isset( $_GET['as_logs'] ) ? absint( $_GET['as_logs'] ) : 0;
+				$transients   = isset( $_GET['transients'] ) ? absint( $_GET['transients'] ) : 0;
+				$deautoloaded = isset( $_GET['deautoloaded'] ) ? absint( $_GET['deautoloaded'] ) : 0;
+				?>
+				<div class="wst-banner-notice wst-banner-notice--success">
+					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+					<span>
+						<?php
+						echo wp_kses_post(
+							sprintf(
+								'<strong>Optimisation BDD exécutée avec succès :</strong> %d action(s) et %d log(s) Action Scheduler purgés, %d transient(s) expiré(s) supprimé(s), %d option(s) lourde(s) désautoloadée(s).',
+								$as_actions,
+								$as_logs,
+								$transients,
+								$deautoloaded
+							)
+						);
+						?>
+					</span>
+				</div>
+			<?php endif; ?>
+
 			<!-- Filter & Search Bar -->
 			<section class="wst-toolbar" aria-label="Filtres des fonctionnalités">
 				<div class="wst-search-box">
@@ -267,7 +293,7 @@ class Tools_Admin {
 						type="search"
 						id="wst-feature-search"
 						class="wst-search-box__input"
-						placeholder="Rechercher une fonctionnalité, un hook (ex: Action Scheduler, locale, email)..."
+						placeholder="Rechercher une fonctionnalité, un hook (ex: Action Scheduler, HPOS, Geo-IP, SVG)..."
 						autocomplete="off"
 					>
 				</div>
@@ -358,6 +384,13 @@ class Tools_Admin {
 											<svg class="wst-details-toggle__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
 											<span>Afficher le contexte technique &amp; les hooks</span>
 										</button>
+
+										<?php if ( 'database_and_scheduler_hygiene' === $feature_id && $is_enabled ) : ?>
+											<a href="<?php echo esc_url( \SOYOO\Tools\Features\Feature_Database_Hygiene::get_manual_trigger_url() ); ?>" class="wst-quick-action-btn">
+												<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
+												<span>Purger Action Scheduler &amp; Transients maintenant</span>
+											</a>
+										<?php endif; ?>
 									</div>
 								</div>
 

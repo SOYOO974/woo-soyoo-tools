@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       Woo SOYOO Tools
  * Plugin URI:        https://github.com/SOYOO974/woo-soyoo-tools/
- * Description:       Boîte à outils et améliorations transversales SOYOO pour WooCommerce (fiabilisation des e-mails différés Action Scheduler, correctifs natifs, optimisations back-office & front-office) avec gestion modulaire par fonctionnalité.
- * Version:           1.0.0
+ * Description:       Boîte à outils et améliorations transversales SOYOO pour WooCommerce (fiabilisation des e-mails différés Action Scheduler, rattachement commandes invités HPOS, hygiène base de données, purge commandes abandonnées, sécurité Geo-IP Admin, SVG sécurisé) avec gestion modulaire par fonctionnalité.
+ * Version:           1.1.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            SOYOO
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants.
-define( 'WOO_SOYOO_TOOLS_VERSION', '1.0.0' );
+define( 'WOO_SOYOO_TOOLS_VERSION', '1.1.0' );
 define( 'WOO_SOYOO_TOOLS_FILE', __FILE__ );
 define( 'WOO_SOYOO_TOOLS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WOO_SOYOO_TOOLS_URL', plugin_dir_url( __FILE__ ) );
@@ -49,6 +49,11 @@ add_action( 'before_woocommerce_init', function () {
 
 // 3. Load core classes and initialize features.
 require_once WOO_SOYOO_TOOLS_DIR . 'includes/features/class-feature-force-french-emails.php';
+require_once WOO_SOYOO_TOOLS_DIR . 'includes/features/class-feature-link-guest-orders.php';
+require_once WOO_SOYOO_TOOLS_DIR . 'includes/features/class-feature-database-hygiene.php';
+require_once WOO_SOYOO_TOOLS_DIR . 'includes/features/class-feature-abandoned-orders-cleanup.php';
+require_once WOO_SOYOO_TOOLS_DIR . 'includes/features/class-feature-admin-login-alert.php';
+require_once WOO_SOYOO_TOOLS_DIR . 'includes/features/class-feature-safe-svg-uploads.php';
 require_once WOO_SOYOO_TOOLS_DIR . 'includes/class-feature-manager.php';
 require_once WOO_SOYOO_TOOLS_DIR . 'includes/class-tools-admin.php';
 

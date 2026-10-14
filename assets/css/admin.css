@@ -347,7 +347,11 @@ body.woocommerce_page_woo-soyoo-tools #wpbody-content > .error {
 }
 
 .wst-feature-card__actions {
-	margin-top: 4px;
+	margin-top: 6px;
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 14px;
 }
 
 .wst-details-toggle {
@@ -375,6 +379,30 @@ body.woocommerce_page_woo-soyoo-tools #wpbody-content > .error {
 
 .wst-details-toggle[aria-expanded="true"] .wst-details-toggle__chevron {
 	transform: rotate(180deg);
+}
+
+.wst-quick-action-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 12px;
+	font-weight: 600;
+	color: #0f172a;
+	background: #f1f5f9;
+	border: 1px solid #cbd5e1;
+	padding: 4px 10px;
+	border-radius: 6px;
+	text-decoration: none;
+	transition: all 0.15s ease;
+}
+
+.wst-quick-action-btn:hover,
+.wst-quick-action-btn:focus {
+	background: #0f172a;
+	border-color: #0f172a;
+	color: #ffffff;
+	text-decoration: none;
+	outline: none;
 }
 
 /* Switch Control */
