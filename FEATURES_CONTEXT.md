@@ -3,10 +3,20 @@
 Ce fichier de contexte centralise et documente de manière exhaustive **chaque fonctionnalité et amélioration transversale** implémentée dans le plugin `woo-soyoo-tools`.
 
 > [!IMPORTANT]
-> **Règle de gouvernance obligatoire** : Toute nouvelle fonctionnalité ajoutée à `woo-soyoo-tools` doit impérativement :
-> 1. Être déclarée dans le registre central [`includes/class-feature-manager.php`](file:///c:/Antigravity/woo-plugins/woo-soyoo-tools/includes/class-feature-manager.php) afin d'apparaître automatiquement sur la page d'administration **WooCommerce > SOYOO Tools** (filtrable et désactivable par site).
-> 2. Être isolée dans sa propre classe sous `includes/features/class-feature-<slug>.php`.
-> 3. Être documentée dans ce fichier `FEATURES_CONTEXT.md` (ID, catégorie, état par défaut, problème résolu, cause racine et architecture technique).
+> **Règle de gouvernance & Mise à jour automatique obligatoire (`plugin-update-checker`)** :
+> Dès qu'une nouvelle fonctionnalité est implémentée ou qu'une fonctionnalité existante est modifiée dans `woo-soyoo-tools`, il est **impératif** d'exécuter les 5 étapes suivantes sans attendre de consigne :
+> 1. **Isolation modulaire** : Créer/mettre à jour la classe sous `includes/features/class-feature-<slug>.php`.
+> 2. **Registre central** : Déclarer la fonctionnalité dans [`includes/class-feature-manager.php`](file:///c:/Antigravity/woo-plugins/woo-soyoo-tools/includes/class-feature-manager.php) pour qu'elle apparaisse dans **WooCommerce > SOYOO Tools** (filtrable et désactivable par site).
+> 3. **Documentation de contexte** : Documenter la fonctionnalité dans ce fichier `FEATURES_CONTEXT.md` (ID, catégorie, état par défaut, problème résolu, cause racine et architecture technique).
+> 4. **Incrémentation de version & Build ZIP** : Incrémenter `Version: X.Y.Z` et `WOO_SOYOO_TOOLS_VERSION` dans [`woo-soyoo-tools.php`](file:///c:/Antigravity/woo-plugins/woo-soyoo-tools/woo-soyoo-tools.php), puis compiler l'archive `woo-soyoo-tools.zip` via :
+>    ```powershell
+>    powershell -ExecutionPolicy Bypass -File .\bin\build-zip.ps1
+>    ```
+> 5. **Commit, Push & Création systématique de la Release GitHub (Auto-Update PUC v5)** : Pousser sur `origin/main` et **toujours créer la release GitHub correspondante avec l'asset `woo-soyoo-tools.zip` attaché** pour déclencher la mise à jour automatique via `plugin-update-checker` sur tous les sites WooCommerce clients :
+>    ```bash
+>    git add . && git commit -m "feat: <description> (vX.Y.Z)" && git push origin main
+>    gh release create vX.Y.Z woo-soyoo-tools.zip --title "vX.Y.Z - <Titre>" --notes "<Changelog>"
+>    ```
 
 ---
 

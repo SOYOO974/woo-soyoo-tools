@@ -26,16 +26,18 @@ define( 'WOO_SOYOO_TOOLS_URL', plugin_dir_url( __FILE__ ) );
 define( 'WOO_SOYOO_TOOLS_BASENAME', plugin_basename( __FILE__ ) );
 
 // 1. Initialize the Plugin Update Checker for GitHub releases.
-if ( file_exists( WOO_SOYOO_TOOLS_DIR . 'plugin-update-checker/plugin-update-checker.php' ) ) {
-	require_once WOO_SOYOO_TOOLS_DIR . 'plugin-update-checker/plugin-update-checker.php';
-	$woo_soyoo_tools_update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
-		'https://github.com/SOYOO974/woo-soyoo-tools/',
-		__FILE__,
-		'woo-soyoo-tools'
-	);
-	$woo_soyoo_tools_update_checker->setBranch( 'main' );
-	$woo_soyoo_tools_update_checker->getVcsApi()->enableReleaseAssets();
-}
+require_once WOO_SOYOO_TOOLS_DIR . 'plugin-update-checker/plugin-update-checker.php';
+use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+
+$woo_soyoo_tools_update_checker = PucFactory::buildUpdateChecker(
+	'https://github.com/SOYOO974/woo-soyoo-tools/',
+	__FILE__,
+	'woo-soyoo-tools'
+);
+
+// Set the branch that contains the stable release.
+$woo_soyoo_tools_update_checker->setBranch( 'main' );
+$woo_soyoo_tools_update_checker->getVcsApi()->enableReleaseAssets();
 
 // 2. Declare WooCommerce HPOS & Product Caching compatibility.
 add_action( 'before_woocommerce_init', function () {
