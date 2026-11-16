@@ -26,6 +26,7 @@ Ce fichier de contexte centralise et documente de manière exhaustive **chaque f
 | :--- | :--- | :--- | :---: | :---: | :--- |
 | `force_french_transactional_emails` | Verrouillage de la langue française des e-mails de commande (Action Scheduler & Webhooks) | E-mails & Notifications | **Activée** (`true`) | `v1.0.0` | [`includes/features/class-feature-force-french-emails.php`](file:///c:/Antigravity/woo-plugins/woo-soyoo-tools/includes/features/class-feature-force-french-emails.php) |
 | `link_guest_orders_to_customers` | Rattachement automatique des commandes invités aux comptes clients (HPOS & Temps réel) | Commandes & Clients | **Activée** (`true`) | `v1.1.0` | [`includes/features/class-feature-link-guest-orders.php`](file:///c:/Antigravity/woo-plugins/woo-soyoo-tools/includes/features/class-feature-link-guest-orders.php) |
+| `guest_account_onboarding_and_security` | Accompagnement connexion client invité (`/mon-compte/`) & Verrou anti-usurpation d'inscription | Commandes & Clients | **Activée** (`true`) | `v1.2.0` | [`includes/features/class-feature-guest-account-onboarding.php`](file:///c:/Antigravity/woo-plugins/woo-soyoo-tools/includes/features/class-feature-guest-account-onboarding.php) |
 | `database_and_scheduler_hygiene` | Hygiène Base de Données, Action Scheduler, Transients & Options Autoload | Performance & Base de données | **Activée** (`true`) | `v1.1.0` | [`includes/features/class-feature-database-hygiene.php`](file:///c:/Antigravity/woo-plugins/woo-soyoo-tools/includes/features/class-feature-database-hygiene.php) |
 | `abandoned_orders_cleanup_1y` | Purge nocturne des commandes abandonnées ou échouées de plus d'un an (HPOS-Safe) | Performance & Base de données | **Activée** (`true`) | `v1.1.0` | [`includes/features/class-feature-abandoned-orders-cleanup.php`](file:///c:/Antigravity/woo-plugins/woo-soyoo-tools/includes/features/class-feature-abandoned-orders-cleanup.php) |
 | `admin_login_geo_alert` | Alerte de sécurité Geo-IP asynchrone sur les connexions Administrateur | Sécurité & Surveillance | **Activée** (`true`) | `v1.1.0` | [`includes/features/class-feature-admin-login-alert.php`](file:///c:/Antigravity/woo-plugins/woo-soyoo-tools/includes/features/class-feature-admin-login-alert.php) |
@@ -202,3 +203,35 @@ WordPress bloque par défaut le téléversement de fichiers vectoriels `.svg` (l
      - Rejette le fichier s'il contient l'un des vecteurs XSS (`<script`, `onload=`, `onerror=`, `javascript:`, `<iframe`, `<foreignObject` ou tout attribut d'événement inline `on*=`).
 3. **Rendu des miniatures dans la Médiathèque (`admin_head`)** :
    - Injecte une règle CSS légère garantissant un affichage proportionnel des fichiers `.svg` dans la grille et la liste de la médiathèque WordPress.
+
+---
+
+### 7. `guest_account_onboarding_and_security` — Accompagnement connexion client invité (`/mon-compte/`) & Verrou anti-usurpation d'inscription
+
+- **Catégorie** : `Commandes & Clients` (`orders`)
+- **Badge** : `Conversion & Sécurité`
+- **État par défaut** : Activée (`true`)
+- **Introduite en** : `v1.2.0`
+- **Classe PHP** : [`\SOYOO\Tools\Features\Feature_Guest_Account_Onboarding`](file:///c:/Antigravity/woo-plugins/woo-soyoo-tools/includes/features/class-feature-guest-account-onboarding.php)
+
+#### Symptôme & Problème observé (SAV + Faille d'usurpation native WooCommerce)
+1. **Tickets SAV récurrents sur `/mon-compte/` et `/mon-compte/lost-password/`** :
+   - Un client ayant déjà acheté en mode invité (`customer_id = 0`) tente plus tard de se connecter ou clique sur « Mot de passe perdu » en renseignant son e-mail.
+   - WooCommerce lui retourne le message brutal *« Adresse e-mail inconnue. Vérifiez l’orthographe ou essayez avec votre identifiant. »* (et dans `WC_Shortcode_My_Account::retrieve_password()`, WooCommerce déclenche l'action `lostpassword_post` et **non** le filtre WordPress `lostpassword_errors`). Le client pense que sa commande a disparu et ouvre un ticket SAV.
+2. **Faille critique d'usurpation de compte à l'inscription sans mot de passe** :
+   - Lorsque `woocommerce_registration_generate_password = yes` (réglage par défaut WooCommerce), `WC_Form_Handler::process_registration()` appelle immédiatement `wc_set_customer_auth_cookie( $new_customer )` **avant toute vérification de propriété de la boîte e-mail**.
+   - Si les commandes invitées sont rattachées automatiquement lors de `woocommerce_created_customer`, n'importe quel tiers saisissant l'adresse e-mail d'un client invité dans le formulaire « S'inscrire » est connecté instantanément et accède en clair à ses adresses postales, téléphones, factures et coupons nominatifs.
+
+#### Architecture de la solution SOYOO (4 Volets + Garde-fou Anti-Doublon)
+1. **Garde-fou anti-doublon Jardin Naturel (`after_setup_theme`, prio 20)** :
+   - Diffère l'attachement des hooks à `after_setup_theme` (priorité `20`, après le chargement de `functions.php` du thème actif) et vérifie `function_exists( 'jd_authenticate_guest_customer_check' )`. Si le thème embarque déjà cette logique, le module se met automatiquement en veille sans doublon (avec indicateur temps réel dans **WooCommerce > SOYOO Tools**).
+2. **Rattachement HPOS idempotent + Réconciliation quotidienne par lots de 200** :
+   - Sur `woocommerce_created_customer` (prio `20`), relie toute commande `shop_order` restante (`billing_email` + `customer_id = 0`) via `wc_get_orders()`.
+   - Tâche quotidienne légère `soyoo_tools_guest_orders_link_cron` (04h00 heure locale `wp_timezone()`, témoin transient 24h) inspectant par lots de `200` les commandes `customer_id = 0` avec curseur de pagination rotatif non-autoloadé (`soyoo_tools_guest_orders_sync_page`), cache mémoire par e-mail et garde-fou de 20s afin de balayer tout l'historique sans jamais rester bloqué sur les 200 premiers invités non inscrits.
+3. **Détection d'historique invité & Pré-remplissage JS Zéro-PII (Cloudflare Edge Cache Safe)** :
+   - Sur `authenticate` (prio `30`, codes `invalid_email`, `invalid_username`, `empty_password` + préservation `login_errors` prio `999` face aux extensions de sécurité) et sur `lostpassword_post` (prio `10`), vérifie si l'e-mail possède au moins une commande invitée.
+   - Protégé par un rate-limit IP anti-énumération (`HTTP_CF_CONNECTING_IP` / `REMOTE_ADDR`, max `8` vérifications / `15 min` via transient `soyoo_guest_chk_*`).
+   - Affiche un encadré éditorial clair sans émoji système (compatible `wc_kses_notice()`, classic notices et block notices WC 8.5+) et pré-remplit `#reg_email` en JavaScript côté client (ouverture auto de l'onglet d'inscription Woodmart si masqué, déclenchement des événements `input`/`change` pour les labels flottants et nettoyage `history.replaceState` du paramètre `?soyoo_register_email=` sans jamais refléter de PII en PHP sur requête `GET`).
+4. **Verrou anti-usurpation sur `woocommerce_registration_auth_new_customer` (hors `is_checkout()`)** :
+   - Hors tunnel de commande (`! is_checkout()` et `! WOOCOMMERCE_CHECKOUT`), si l'adresse e-mail possède déjà au moins `1` commande (`wc_get_orders`) ou `1` coupon nominatif exact (`shop_coupon` avec validation stricte de `customer_email`), remplace la notice générique par un encadré invitant à cliquer sur le lien reçu par e-mail et retourne **`false`** pour bloquer l'ouverture de session tant que la boîte mail n'est pas vérifiée (y compris si `woocommerce_registration_generate_password = no`, en invalidant le mot de passe non vérifié et en envoyant une clé de réinitialisation officielle).
+   - Les nouveaux clients sans historique (`0` commande, `0` coupon) conservent l'auto-login immédiat (`true`) sans aucune friction.

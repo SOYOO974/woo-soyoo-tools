@@ -379,6 +379,13 @@ class Tools_Admin {
 										</div>
 									<?php endif; ?>
 
+									<?php if ( 'guest_account_onboarding_and_security' === $feature_id && \SOYOO\Tools\Features\Feature_Guest_Account_Onboarding::is_superseded_by_theme() ) : ?>
+										<div class="wst-feature-card__live-info">
+											<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+											<span>Garde-fou actif : pris en charge nativement par le thème (<code>jd_authenticate_guest_customer_check</code>) — aucun doublon exécuté.</span>
+										</div>
+									<?php endif; ?>
+
 									<div class="wst-feature-card__actions">
 										<button type="button" class="wst-details-toggle" aria-expanded="false">
 											<svg class="wst-details-toggle__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
